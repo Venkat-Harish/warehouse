@@ -15,6 +15,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState(null);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
   const LIMIT = 20;
 
   const fetchItems = async (skip = 0) => {
@@ -57,6 +58,15 @@ export default function HistoryPage() {
     <div>
       <h1 className="page-title">🕐 My Checks</h1>
 
+      {fullScreenImage && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}
+          onClick={() => setFullScreenImage(null)}
+        >
+          <img src={fullScreenImage} style={{ maxWidth: '95vw', maxHeight: '95vh', objectFit: 'contain' }} alt="Full screen preview" />
+        </div>
+      )}
+
       {loading && (
         <div className="loading-box"><div className="spinner" /><p>Loading history…</p></div>
       )}
@@ -71,6 +81,7 @@ export default function HistoryPage() {
       {items.map((item) => {
         const badge = OCR_STATUS_BADGE[item.ocr_status] ?? OCR_STATUS_BADGE.pending;
         const isExpanded = expandedId === item.id;
+        const photoUrl = `${api.defaults.baseURL}/verify/${item.id}/photo`;
 
         return (
           <div 
@@ -80,7 +91,9 @@ export default function HistoryPage() {
             onClick={() => setExpandedId(isExpanded ? null : item.id)}
           >
             <div style={{ display: 'flex', gap: 16 }}>
-              <div className="history-thumb-placeholder">📦</div>
+              <div className="history-thumb-placeholder" style={{ overflow: 'hidden', padding: 0 }}>
+                <img src={photoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '📦'; }} />
+              </div>
               <div className="history-info" style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span className="history-wid">WID: {item.wid}</span>
@@ -107,6 +120,15 @@ export default function HistoryPage() {
 
             {isExpanded && (
               <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase' }}>Validation Photo</p>
+                  <img 
+                    src={photoUrl}
+                    style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8, border: '1px solid var(--border)', background: '#000', cursor: 'zoom-in' }}
+                    alt="Validation photo"
+                    onClick={() => setFullScreenImage(photoUrl)}
+                  />
+                </div>
                 <OcrComparison 
                   dbData={{
                     ean: item.db_ean,

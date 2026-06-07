@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { BrowserMultiFormatReader } from '@zxing/library';
 import BarcodeScanner from '../components/BarcodeScanner';
 import ProductCard from '../components/ProductCard';
 import OcrComparison from '../components/OcrComparison';
@@ -92,6 +93,28 @@ export default function ScanPage() {
     setWidInput(code);
     handleWidConfirm(code);
   }, [handleWidConfirm]);
+
+  const handleBarcodeImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = URL.createObjectURL(file);
+      const reader = new BrowserMultiFormatReader();
+      const result = await reader.decodeFromImageUrl(url);
+      const code = result.getText().replace(/\D/g, '');
+      if (code.length >= 7 && code.length <= 8) {
+         setWidInput(code);
+         handleWidConfirm(code);
+         toast.success('Barcode detected successfully');
+      } else {
+         toast.error(`Detected non-WID barcode: ${code}`);
+      }
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Could not detect barcode from image');
+    }
+    e.target.value = ''; // reset
+  };
 
   // ── Photo selection ───────────────────────────────────────────────────
   const handlePhotoSelect = (file) => {
@@ -200,6 +223,14 @@ export default function ScanPage() {
               >
                 →
               </button>
+              <label 
+                className="btn btn-outline" 
+                style={{ width: 'auto', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Upload barcode image"
+              >
+                🖼️
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBarcodeImageUpload} />
+              </label>
             </div>
           </div>
         </>
