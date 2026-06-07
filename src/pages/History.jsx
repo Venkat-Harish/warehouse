@@ -81,7 +81,8 @@ export default function HistoryPage() {
       {items.map((item) => {
         const badge = OCR_STATUS_BADGE[item.ocr_status] ?? OCR_STATUS_BADGE.pending;
         const isExpanded = expandedId === item.id;
-        const photoUrl = `${api.defaults.baseURL}/verify/${item.id}/photo`;
+        const token = localStorage.getItem('token');
+        const photoUrl = `${api.defaults.baseURL}/verify/${item.id}/photo?token=${token}`;
 
         return (
           <div 
